@@ -1,20 +1,57 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 👋 Hi, I'm Karthikeyan Ajith
 
-# Run and deploy your AI Studio app
+## MERN Stack Developer
 
-This contains everything you need to run your app locally.
+Welcome to my personal portfolio repository.
 
-View your app in AI Studio: https://ai.studio/apps/db9e1d22-7b1f-4267-b160-34e5e62d51f0
+## 🚀 About Me
 
-## Run Locally
+- 🎓 BCA Graduate (2023–2026)
+- 💻 MERN Stack Developer
+- 🌱 Learning Cloud Computing & DevOps
+- 📍 India
+- 📧 Email: karthikeyankesu4@gmail.com
 
-**Prerequisites:**  Node.js
+## 🛠 Tech Stack
 
+### Frontend
+- HTML5
+- CSS3
+- JavaScript
+- React.js
+- Bootstrap
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+
+### Tools
+- Git
+- GitHub
+- VS Code
+- Postman
+- Nodemailer
+
+## 📂 Projects
+
+### 🛒 Online Grocery Delivery Application
+Full-stack MERN grocery application.
+
+### 🎬 Netflix Clone
+
+Responsive Netflix UI Clone.
+
+### 🍔 Swiggy Clone
+
+Food delivery interface using HTML, CSS & JavaScript.
+
+### 🌐 Portfolio Website
+
+Personal portfolio with working contact form using Nodemailer.
+
+## 📫 Connect with Me
+
+- GitHub: https://github.com/karthikeyan7333
+- LinkedIn:https://www.linkedin.com/in/karthikeyan-ajith-31726a40b
