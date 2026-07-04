@@ -68,8 +68,8 @@ router.get("/projects", (req, res) => {
       description: "A frontend web application that replicates the Netflix UI. It features movie category grids, dynamic trailer streaming, and interactive components using modern CSS techniques and JavaScript.",
       image: "netflix", // maps to our generated Netflix image
       tags: ["HTML5", "CSS3","Bootstrap"],
-      github: "https://github.com/karthikeyan-ajith/netflix-clone",
-      demo: "https://netflix-clone-cinematic.example.com"
+      github: "https://github.com/karthikeyan7333/netflxc-clone",
+      demo: "https://karthikeyan7333.github.io/netflxc-clone/"
     },
     {
       id: "swiggy-clone",
@@ -77,7 +77,7 @@ router.get("/projects", (req, res) => {
       description: "A responsive Swiggy-inspired food delivery web application built using HTML, CSS, and JavaScript. Features include restaurant listings, food categories, search functionality, interactive UI components, and a modern user experience optimized for desktop and mobile devices.",
       image: "swiggy-clone", // maps to swiggy-clone placeholder
       tags: ["HTML5", "CSS3", "JavaScript", "Responsive Design"],
-      github: "https://github.com/karthikeyan-ajith/swiggy-clone-placeholder",
+      github: "https://github.com/karthikeyan7333/swiggy-clone",
       demo: "https://karthikeyan7333.github.io/swiggy-clone/"
     },
     {

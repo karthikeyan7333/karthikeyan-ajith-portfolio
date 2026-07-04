@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Map project image IDs to our generated visual assets or general picsum
       let imgSrc = "https://picsum.photos/seed/" + proj.id + "/600/450";
       if (proj.image === "grocery") {
-        imgSrc = "/src/assets/images/groceryimage.png";
+        imgSrc = "/src/assets/images/newgrocery.jpg";
       } else if (proj.image === "netflix") {
         imgSrc = "/src/assets/images/netflix.png";
       } else if (proj.image === "swiggy-clone" || proj.image === "swiggy") {
