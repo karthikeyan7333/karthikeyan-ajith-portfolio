@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | Karthikeyan Ajith Portfolio</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <style>
+    .error-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .error-card {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      padding: 50px 30px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .error-code {
+      font-size: 110px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    }
+    
+    .error-title {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: var(--text-primary);
+    }
+    
+    .error-message {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    
+    .error-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body class="error-wrapper">
+
+  <!-- Interactive Background Blobs -->
+  <div class="animated-bg">
+    <div class="blob-gradient blob-1" style="width: 300px; height: 300px; left: 10%; top: 20%;"></div>
+    <div class="blob-gradient blob-2" style="width: 300px; height: 300px; right: 10%; bottom: 20%;"></div>
+  </div>
+
+  <div class="error-card glass-card">
+    <div class="error-code font-display">404</div>
+    <h1 class="error-title font-display">Lost in the Digital Grid</h1>
+    <p class="error-message">
+      The resource you are looking for has been moved, deleted, or does not exist. Let's return to the premium space interface and start fresh.
+    </p>
+    <a href="/" class="btn btn-primary error-btn">
+      <i data-lucide="arrow-left"></i> Return Home
+    </a>
+  </div>
+
+  <!-- Lucide Icon Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
