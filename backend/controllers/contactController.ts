@@ -34,28 +34,39 @@ function saveLocally(data: { name: string; email: string; subject: string; messa
   fs.writeFileSync(filePath, JSON.stringify(contacts, null, 2), "utf-8");
   return newContact;
 }
-
 export async function submitContact(req: Request, res: Response) {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, subject, message } = req.body ?? {};
 
     // 1. Validation
-    if (!name || !email || !subject || !message) {
+    if ([name, email, subject, message].some((value) => typeof value !== "string" || !value.trim())) {
       return res.status(400).json({
         success: false,
         message: "Please fill in all fields.",
       });
     }
 
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!emailRegex.test(email)) {
+    const contactData = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      subject: subject.trim(),
+      message: message.trim(),
+    };
+
+    if (contactData.name.length > 100 || contactData.email.length > 254 || contactData.subject.length > 200 || contactData.message.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        message: "Please keep the name, email, subject, and message within the allowed length.",
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(contactData.email)) {
       return res.status(400).json({
         success: false,
         message: "Please provide a valid email address.",
       });
     }
-
-    const contactData = { name, email, subject, message };
 
     // 2. Storage in MongoDB or Local fallback
     let savedContact;
@@ -98,8 +109,20 @@ export async function submitContact(req: Request, res: Response) {
         });
       }
 
+      const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character]!);
+      const safeName = escapeHtml(contactData.name);
+      const safeEmail = escapeHtml(contactData.email);
+      const safeSubject = escapeHtml(contactData.subject);
+      const safeMessage = escapeHtml(contactData.message).replace(/\n/g, "<br>");
       const mailOptions = {
-        from: `"${name}" <${email}>`,
+        from: process.env.EMAIL_USER || "Portfolio Contact <no-reply@localhost>",
+        replyTo: contactData.email,
         to: process.env.CONTACT_RECEIVER_EMAIL || "karthikeyankesu4@gmail.com",
         subject: `💼 Portfolio Contact: ${subject}`,
         html: `
@@ -111,14 +134,14 @@ export async function submitContact(req: Request, res: Response) {
             <div style="padding: 30px; line-height: 1.6;">
               <div style="margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 15px;">
                 <p style="margin: 5px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase;">Sender Details</p>
-                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;"><strong style="color: #3b82f6;">Name:</strong> ${name}</p>
-                <p style="margin: 5px 0; font-size: 16px;"><strong style="color: #3b82f6;">Email:</strong> <a href="mailto:${email}" style="color: #06b6d4; text-decoration: none;">${email}</a></p>
-                <p style="margin: 5px 0; font-size: 16px;"><strong style="color: #3b82f6;">Subject:</strong> ${subject}</p>
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;"><strong style="color: #3b82f6;">Name:</strong> ${safeName}</p>
+                <p style="margin: 5px 0; font-size: 16px;"><strong style="color: #3b82f6;">Email:</strong> <a href="mailto:${safeEmail}" style="color: #06b6d4; text-decoration: none;">${safeEmail}</a></p>
+                <p style="margin: 5px 0; font-size: 16px;"><strong style="color: #3b82f6;">Subject:</strong> ${safeSubject}</p>
               </div>
               <div>
                 <p style="margin: 5px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase;">Message Content</p>
                 <div style="background-color: #111827; border-left: 4px solid #8b5cf6; padding: 15px; border-radius: 4px; font-style: italic; color: #e5e7eb; margin-top: 5px;">
-                  ${message.replace(/\n/g, "<br>")}
+                  ${safeMessage}
                 </div>
               </div>
             </div>
@@ -156,28 +179,5 @@ export async function submitContact(req: Request, res: Response) {
       success: false,
       message: "Server error occurred. Please try again later.",
     });
-  }
-}
-
-// Get contacts (for local dashboard/admin inspection if needed, or to support standard REST specs)
-export async function getContacts(req: Request, res: Response) {
-  try {
-    if (isMongoDBConnected) {
-      const contacts = await Contact.find().sort({ createdAt: -1 });
-      return res.status(200).json({ success: true, count: contacts.length, data: contacts });
-    } else {
-      const filePath = path.join(process.cwd(), "data", "contacts.json");
-      let contacts = [];
-      if (fs.existsSync(filePath)) {
-        try {
-          contacts = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-          // Sort by date desc
-          contacts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        } catch (e) {}
-      }
-      return res.status(200).json({ success: true, count: contacts.length, data: contacts });
-    }
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: "Server error retrieving submissions" });
   }
 }

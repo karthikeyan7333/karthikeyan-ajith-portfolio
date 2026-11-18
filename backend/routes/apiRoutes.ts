@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { submitContact, getContacts } from "../controllers/contactController";
+import { submitContact } from "../controllers/contactController";
 
 const router = Router();
 
 // 1. Contact submission API
 router.post("/contact", submitContact);
-router.get("/contact/messages", getContacts);
 
 // 2. About Details API
 router.get("/about", (req, res) => {

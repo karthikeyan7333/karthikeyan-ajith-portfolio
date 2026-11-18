@@ -248,50 +248,6 @@ button, input, textarea {
 .text-purple { color: var(--accent-purple); }
 .text-blue { color: var(--accent-blue); }
 
-/* Custom Cursor */
-.custom-cursor {
-  position: fixed;
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-cyan);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 10000;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, background-color 0.2s;
-  mix-blend-mode: difference;
-}
-
-.custom-cursor-follower {
-  position: fixed;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--accent-purple);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: transform 0.08s cubic-bezier(0.25, 1, 0.5, 1), width 0.3s, height 0.3s, border-color 0.3s;
-}
-
-body.hovering-link .custom-cursor {
-  width: 14px;
-  height: 14px;
-  background-color: var(--accent-purple);
-}
-
-body.hovering-link .custom-cursor-follower {
-  width: 48px;
-  height: 48px;
-  border-color: var(--accent-cyan);
-}
-
-@media (max-width: 1024px) {
-  .custom-cursor, .custom-cursor-follower {
-    display: none !important;
-  }
-}
-
 /* Scroll Progress Bar */
 .scroll-progress-container {
   position: fixed;

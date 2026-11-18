@@ -29,7 +29,7 @@ Deploy two services from this repository:
 - Root Directory: `frontend`
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
-- Environment: `VITE_API_URL=https://<your-backend-service>.onrender.com`
+- Environment: `VITE_API_URL=https://karthikeyan-ajith-portfolio-backend.onrender.com`
 
 ### Backend: Web Service
 
@@ -47,7 +47,8 @@ Deploy two services from this repository:
 - `GET /api/skills`
 - `GET /api/projects`
 - `POST /api/contact`
-- `GET /api/contact/messages` (existing submissions listing endpoint)
 - `GET /health`
+
+Contact submissions are private and are not exposed through a read endpoint. The local JSON file is ignored by Git; use MongoDB for durable production storage because Render's local filesystem is ephemeral. Configure SMTP values to send real email notifications. Without SMTP settings, the service uses an Ethereal test inbox and submissions still succeed, but notification emails are simulated.
 
 The contact form submits to `POST /api/contact`. The portfolio loads its About, Skills, and Projects data from the corresponding GET endpoints.

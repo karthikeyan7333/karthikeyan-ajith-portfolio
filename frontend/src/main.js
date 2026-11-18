@@ -5,6 +5,13 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const apiBaseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
   // --- 1. LOADER INITIALIZATION ---
   const loader = document.getElementById("loader");
   window.addEventListener("load", () => {
@@ -175,7 +182,7 @@ function populateProjects(projects) {
               rel="noopener noreferrer"
               class="overlay-btn"
               aria-label="View Code">
-              <i data-lucide="github"></i>
+              <i class="fa-brands fa-github" aria-hidden="true"></i>
             </a>
             ${overlayDemoButton}
           </div>
@@ -227,62 +234,7 @@ function populateProjects(projects) {
   
   loadBackendData();
 
-  // --- 4. CUSTOM CURSOR & LAGGING CIRCLE ---
-  const cursor = document.getElementById("customCursor");
-  const follower = document.getElementById("customFollower");
-
-  let cursorX = 0, cursorY = 0;
-  let followerX = 0, followerY = 0;
-
-  document.addEventListener("mousemove", (e) => {
-    cursorX = e.clientX;
-    cursorY = e.clientY;
-    
-    if (cursor) {
-      cursor.style.left = `${cursorX}px`;
-      cursor.style.top = `${cursorY}px`;
-    }
-  });
-
-  // Render follower with a smooth lagging interpolation
-  function updateFollower() {
-    const dx = cursorX - followerX;
-    const dy = cursorY - followerY;
-    
-    followerX += dx * 0.12;
-    followerY += dy * 0.12;
-    
-    if (follower) {
-      follower.style.left = `${followerX}px`;
-      follower.style.top = `${followerY}px`;
-    }
-    
-    requestAnimationFrame(updateFollower);
-  }
-  updateFollower();
-
-  // Link Hover cursor expansion
-  function setupCursorHoverEvents() {
-    const targetElements = document.querySelectorAll("a, button, input, textarea, .social-icon, .mobile-menu-toggle");
-    targetElements.forEach((el) => {
-      el.addEventListener("mouseenter", () => {
-        document.body.classList.add("hovering-link");
-      });
-      el.addEventListener("mouseleave", () => {
-        document.body.classList.remove("hovering-link");
-      });
-    });
-  }
-  // Setup initially and re-run when dynamic updates happen
-  setupCursorHoverEvents();
-  
-  // Observe DOM additions to bind cursor events to dynamic nodes
-  const observer = new MutationObserver(() => {
-    setupCursorHoverEvents();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // --- 5. STICKY NAVBAR NAVIGATION ---
+  // --- 4. STICKY NAVBAR NAVIGATION ---
   const header = document.querySelector(".header");
   window.addEventListener("scroll", () => {
     if (window.scrollY > 50) {
@@ -523,6 +475,7 @@ function populateProjects(projects) {
   if (contactForm) {
     contactForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (submitBtn?.disabled) return;
       
       // Reset Alert
       if (formAlert) formAlert.innerHTML = "";
@@ -539,9 +492,13 @@ function populateProjects(projects) {
         submitBtn.innerHTML = `Sending Message <i class="luxury-spinner" style="width: 14px; height: 14px; margin-left: 8px; border-width: 1.5px;"></i>`;
       }
 
+      const controller = new AbortController();
+      const requestTimeout = window.setTimeout(() => controller.abort(), 15000);
+
       try {
         const response = await fetch(`${apiBaseUrl}/api/contact`, {
           method: "POST",
+          signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
           },
@@ -551,25 +508,31 @@ function populateProjects(projects) {
         const data = await response.json();
 
         if (response.ok && data.success) {
+          const safeMessage = escapeHtml(data.message || "Message submitted successfully!");
+          let safePreviewUrl = "";
+          try {
+            const previewUrl = new URL(data.previewUrl);
+            if (previewUrl.protocol === "https:") safePreviewUrl = escapeHtml(previewUrl.href);
+          } catch {}
           // Success Banner
           let bannerHtml = `
             <div class="alert-message alert-success">
               <i data-lucide="check-circle"></i>
               <div>
-                <strong>Success!</strong> ${data.message}
+                <strong>Success!</strong> ${safeMessage}
               </div>
             </div>
           `;
           
-          if (data.previewUrl) {
+          if (safePreviewUrl) {
             bannerHtml = `
               <div class="alert-message alert-success" style="flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <i data-lucide="check-circle"></i>
-                  <span><strong>Success!</strong> ${data.message}</span>
+                  <span><strong>Success!</strong> ${safeMessage}</span>
                 </div>
                 <div style="margin-top: 10px; font-size: 11px; padding-left: 28px;">
-                  📬 Test Email Generated via Ethereal: <a href="${data.previewUrl}" target="_blank" style="color: #06B6D4; text-decoration: underline; font-weight:600;">Click to view simulated inbox</a>
+                  📬 Test Email Generated via Ethereal: <a href="${safePreviewUrl}" target="_blank" rel="noopener noreferrer" style="color: #06B6D4; text-decoration: underline; font-weight:600;">Click to view simulated inbox</a>
                 </div>
               </div>
             `;
@@ -584,7 +547,7 @@ function populateProjects(projects) {
               <div class="alert-message alert-error">
                 <i data-lucide="alert-circle"></i>
                 <div>
-                  <strong>Error:</strong> ${data.message || "Could not submit inquiry. Please check your data."}
+                  <strong>Error:</strong> ${escapeHtml(data.message || "Could not submit inquiry. Please check your data.")}
                 </div>
               </div>
             `;
@@ -597,12 +560,13 @@ function populateProjects(projects) {
             <div class="alert-message alert-error">
               <i data-lucide="alert-circle"></i>
               <div>
-                <strong>Error:</strong> Connection failed. Please ensure the Express server is online and try again.
+                <strong>Error:</strong> ${err.name === "AbortError" ? "Request timed out. Please try again." : "Connection failed. Please ensure the Express server is online and try again."}
               </div>
             </div>
           `;
         }
       } finally {
+        window.clearTimeout(requestTimeout);
         // Re-enable button
         if (submitBtn) {
           submitBtn.disabled = false;

@@ -26,7 +26,7 @@ async function startServer() {
   });
 
   await connectDB();
-  app.use(express.json());
+  app.use(express.json({ limit: "10kb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use("/api", apiRoutes);
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
