@@ -36,10 +36,10 @@ Deploy two services from this repository:
 - Root Directory: `backend`
 - Build Command: `npm ci && npm run build`
 - Start Command: `npm start`
-- Environment: `FRONTEND_URL=https://<your-static-site>.onrender.com`, plus `MONGODB_URI` and SMTP values as needed
+- Environment: `FRONTEND_URL=https://karthikeyan-ajith-portfolio-uxty.onrender.com`, plus `MONGODB_URI` and SMTP values as needed
 - Health check path: `/health`
 
-`MONGODB_URI` is optional for local development: without it, contact messages are stored in `backend/data/contacts.json`. Render's local filesystem is ephemeral, so configure MongoDB for contact records that must survive service restarts or redeploys. SMTP settings are optional; without them, the existing Ethereal test-email fallback is used.
+`MONGODB_URI` is optional for local development: without it, contact messages are stored in `backend/data/contacts.json`. Render's local filesystem is ephemeral, so configure MongoDB for contact records that must survive service restarts or redeploys. Configure all four SMTP values on Render to send notification emails. Without SMTP settings, production still stores submissions and returns promptly, but skips email notification. The Ethereal test-email fallback is for local development only.
 
 ## API routes
 
@@ -49,6 +49,6 @@ Deploy two services from this repository:
 - `POST /api/contact`
 - `GET /health`
 
-Contact submissions are private and are not exposed through a read endpoint. The local JSON file is ignored by Git; use MongoDB for durable production storage because Render's local filesystem is ephemeral. Configure SMTP values to send real email notifications. Without SMTP settings, the service uses an Ethereal test inbox and submissions still succeed, but notification emails are simulated.
+Contact submissions are private and are not exposed through a read endpoint. The local JSON file is ignored by Git; use MongoDB for durable production storage because Render's local filesystem is ephemeral.
 
 The contact form submits to `POST /api/contact`. The portfolio loads its About, Skills, and Projects data from the corresponding GET endpoints.

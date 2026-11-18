@@ -493,7 +493,7 @@ function populateProjects(projects) {
       }
 
       const controller = new AbortController();
-      const requestTimeout = window.setTimeout(() => controller.abort(), 15000);
+      const requestTimeout = window.setTimeout(() => controller.abort(), 30000);
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/contact`, {

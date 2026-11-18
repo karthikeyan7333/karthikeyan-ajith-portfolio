@@ -5,6 +5,22 @@ import path from "path";
 import Contact from "../models/Contact";
 import { isMongoDBConnected } from "../config/db";
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+}
+
 // Helper to save contact locally when MongoDB is not connected
 function saveLocally(data: { name: string; email: string; subject: string; message: string }) {
   const dirPath = path.join(process.cwd(), "data");
@@ -76,37 +92,56 @@ export async function submitContact(req: Request, res: Response) {
       savedContact = saveLocally(contactData);
     }
 
-    // 3. Email Notification via Nodemailer
+    // 3. Email notification is best-effort; contact submissions are saved first.
     let emailSent = false;
     let emailError = "";
     let previewUrl = "";
+    const smtpValues = [process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.EMAIL_USER, process.env.EMAIL_PASS];
+    const smtpConfigured = smtpValues.every(Boolean);
+    const smtpPartiallyConfigured = smtpValues.some(Boolean) && !smtpConfigured;
 
-    try {
+    if (!smtpConfigured && process.env.NODE_ENV === "production") {
+      emailError = "Email notification is not configured.";
+    } else if (smtpPartiallyConfigured) {
+      emailError = "Email notification is not configured correctly.";
+    } else try {
       let transporter;
+      let fromAddress: string;
 
-      // Use actual env variables if configured
-      if (process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      if (smtpConfigured) {
         transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT),
+          host: process.env.SMTP_HOST!,
+          port: Number(process.env.SMTP_PORT),
           secure: process.env.SMTP_PORT === "465",
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 6000,
           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: process.env.EMAIL_USER!,
+            pass: process.env.EMAIL_PASS!,
           },
         });
+        fromAddress = process.env.EMAIL_USER!;
       } else {
-        // Fallback: Create Ethereal Test Account on-the-fly for realistic preview output
-        const testAccount = await nodemailer.createTestAccount();
+        // Keep the Ethereal preview fallback for local development only.
+        const testAccount = await withTimeout(
+          nodemailer.createTestAccount(),
+          5000,
+          "Timed out creating the Ethereal test account",
+        );
         transporter = nodemailer.createTransport({
           host: "smtp.ethereal.email",
           port: 587,
           secure: false,
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 6000,
           auth: {
             user: testAccount.user,
             pass: testAccount.pass,
           },
         });
+        fromAddress = testAccount.user;
       }
 
       const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({
@@ -121,10 +156,10 @@ export async function submitContact(req: Request, res: Response) {
       const safeSubject = escapeHtml(contactData.subject);
       const safeMessage = escapeHtml(contactData.message).replace(/\n/g, "<br>");
       const mailOptions = {
-        from: process.env.EMAIL_USER || "Portfolio Contact <no-reply@localhost>",
+        from: fromAddress,
         replyTo: contactData.email,
         to: process.env.CONTACT_RECEIVER_EMAIL || "karthikeyankesu4@gmail.com",
-        subject: `💼 Portfolio Contact: ${subject}`,
+        subject: `Portfolio Contact: ${contactData.subject}`,
         html: `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0b0f19; border: 1px solid #1e293b; border-radius: 12px; color: #f3f4f6; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 30px; text-align: center;">
@@ -152,7 +187,16 @@ export async function submitContact(req: Request, res: Response) {
         `,
       };
 
-      const info = await transporter.sendMail(mailOptions);
+      let info;
+      try {
+        info = await withTimeout(
+          transporter.sendMail(mailOptions),
+          8000,
+          "Timed out sending the contact notification",
+        );
+      } finally {
+        transporter.close();
+      }
       emailSent = true;
 
       if (info.messageId && info.host === "smtp.ethereal.email") {
@@ -161,7 +205,7 @@ export async function submitContact(req: Request, res: Response) {
       }
     } catch (err: any) {
       console.error("✉️ Nodemailer send error:", err.message);
-      emailError = err.message;
+      emailError = "Email notification could not be sent.";
     }
 
     res.status(201).json({
