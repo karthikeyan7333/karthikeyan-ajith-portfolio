@@ -4,6 +4,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  const apiBaseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
   // --- 1. LOADER INITIALIZATION ---
   const loader = document.getElementById("loader");
   window.addEventListener("load", () => {
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadBackendData() {
     try {
       // Fetch About Details
-      const aboutRes = await fetch("/api/about");
+      const aboutRes = await fetch(`${apiBaseUrl}/api/about`);
       if (aboutRes.ok) {
         const aboutData = await aboutRes.json();
         const leadEl = document.querySelector(".about-lead");
@@ -50,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Fetch Technical Skills
-      const skillsRes = await fetch("/api/skills");
+      const skillsRes = await fetch(`${apiBaseUrl}/api/skills`);
       if (skillsRes.ok) {
         const skillsData = await skillsRes.json();
         populateSkills("skills-languages", skillsData.languages);
@@ -59,13 +60,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== "undefined") lucide.createIcons();
       }
 
-      // Fetch Projects
-      const projectsRes = await fetch("/api/projects");
-      if (projectsRes.ok) {
-        const projectsData = await projectsRes.json();
-        populateProjects(projectsData);
-        if (typeof lucide !== "undefined") lucide.createIcons();
-      }
+      // // Fetch Projects
+      // const projectsRes = await fetch(`${apiBaseUrl}/api/projects`);
+      // if (projectsRes.ok) {
+      //   const projectsData = await projectsRes.json();
+      //   populateProjects(projectsData);
+      //   if (typeof lucide !== "undefined") lucide.createIcons();
+      // }
     } catch (err) {
       console.warn("⚠️ REST API fetch failed or server offline. Utilizing static HTML fallbacks.");
     }
@@ -98,56 +99,132 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function populateProjects(projects) {
-    const container = document.getElementById("projectsContainer");
-    if (!container || !projects) return;
-    container.innerHTML = ""; // Clear fallback placeholders
+function populateProjects(projects) {
+  const container = document.getElementById("projectsContainer");
+  if (!container || !Array.isArray(projects)) return;
 
-    projects.forEach((proj) => {
-      const card = document.createElement("div");
-      card.className = "project-card glass-card scroll-reveal";
-      
-      // Map project image IDs to our generated visual assets or general picsum
-      let imgSrc = "https://picsum.photos/seed/" + proj.id + "/600/450";
-      if (proj.image === "grocery") {
-        imgSrc = "/src/assets/images/newgrocery.jpg";
-      } else if (proj.image === "netflix") {
-        imgSrc = "/src/assets/images/netflix.png";
-      } else if (proj.image === "swiggy-clone" || proj.image === "swiggy") {
-        imgSrc = "/src/assets/images/swiggy-clone.png";
-      }else if (proj.image === "portfolio") {
-    imgSrc = "/src/assets/images/images.jpg";
+  // Project image mapping
+  const projectImages = {
+    lifty: "/assets/images/lifty.png",
+    tradejournal: "/assets/images/tradejournal.png",
+    progressmind: "/assets/images/progressmind.png",
+    "cloud-house-pos": "/assets/images/cloud-house-pos.png",
+    nutrisnap: "/assets/images/nutrisnap.png",
+    grocery: "/assets/images/newgrocery.jpg",
+    netflix: "/assets/images/netflix.png",
+    "swiggy-clone": "/assets/images/swiggy-clone.png",
+    portfolio: "/assets/images/images.jpg"
+  };
+
+  // Clear static fallback cards
+  container.innerHTML = "";
+
+  projects.forEach((proj) => {
+    const card = document.createElement("div");
+    card.className = "project-card glass-card scroll-reveal";
+
+    // Get actual project image
+    const imgSrc = projectImages[proj.image];
+
+    if (!imgSrc) {
+      console.warn("Project image not found:", proj.image);
+      return;
+    }
+
+    // Generate technology tags
+    const tagsHtml = (proj.tags || [])
+      .map((t) => `<span>${t}</span>`)
+      .join("");
+
+    // Check whether a live demo exists
+    const hasDemo =
+      typeof proj.demo === "string" && proj.demo.trim() !== "";
+
+    const overlayDemoButton = hasDemo
+      ? `<a href="${proj.demo}" target="_blank"
+           rel="noopener noreferrer"
+           class="overlay-btn" aria-label="Live Demo">
+           <i data-lucide="external-link"></i>
+         </a>`
+      : "";
+
+    const actionDemoButton = hasDemo
+      ? `<a href="${proj.demo}" target="_blank"
+           rel="noopener noreferrer"
+           class="btn-text font-mono">
+           Live Demo <i data-lucide="arrow-up-right"></i>
+         </a>`
+      : "";
+
+    // Create project card
+    card.innerHTML = `
+      <div class="project-img-container">
+        <img
+          src="${imgSrc}"
+          alt="${proj.name}"
+          class="project-img"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        />
+
+        <div class="project-overlay">
+          <div class="overlay-buttons">
+            <a
+              href="${proj.github}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="overlay-btn"
+              aria-label="View Code">
+              <i data-lucide="github"></i>
+            </a>
+            ${overlayDemoButton}
+          </div>
+        </div>
+      </div>
+
+      <div class="project-info">
+        <h3 class="project-name font-display">
+          ${proj.name}
+        </h3>
+
+        <p class="project-description">
+          ${proj.description}
+        </p>
+
+        <div class="project-tags font-mono">
+          ${tagsHtml}
+        </div>
+
+        <div class="project-actions">
+          <a
+            href="${proj.github}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-text font-mono">
+            GitHub <i data-lucide="arrow-up-right"></i>
+          </a>
+
+          ${actionDemoButton}
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+
+    // Preserve existing spotlight effect
+    initSpotlight(card);
+  });
+
+  // Apply scroll reveal to dynamically generated cards
+  initScrollReveal();
+
+  // Initialize icons
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
 }
 
-      const tagsHtml = proj.tags.map(t => `<span>${t}</span>`).join("");
-
-      card.innerHTML = `
-        <div class="project-img-container">
-          <img src="${imgSrc}" alt="${proj.name}" class="project-img" referrerPolicy="no-referrer">
-          <div class="project-overlay">
-            <div class="overlay-buttons">
-              <a href="${proj.github}" target="_blank" class="overlay-btn" aria-label="View Code"><i data-lucide="github"></i></a>
-              <a href="${proj.demo}" target="_blank" class="overlay-btn" aria-label="Live Demo"><i data-lucide="external-link"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="project-info">
-          <h3 class="project-name font-display">${proj.name}</h3>
-          <p class="project-description">${proj.description}</p>
-          <div class="project-tags font-mono">
-            ${tagsHtml}
-          </div>
-          <div class="project-actions">
-            <a href="${proj.github}" target="_blank" class="btn-text font-mono">GitHub <i data-lucide="arrow-up-right"></i></a>
-            <a href="${proj.demo}" target="_blank" class="btn-text font-mono">Live Demo <i data-lucide="arrow-up-right"></i></a>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-      initSpotlight(card);
-    });
-  }
-
+  
   loadBackendData();
 
   // --- 4. CUSTOM CURSOR & LAGGING CIRCLE ---
@@ -463,7 +540,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const response = await fetch("/api/contact", {
+        const response = await fetch(`${apiBaseUrl}/api/contact`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

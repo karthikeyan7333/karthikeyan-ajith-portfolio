@@ -1,57 +1,53 @@
-# 👋 Hi, I'm Karthikeyan Ajith
+# Karthikeyan Ajith Portfolio
 
-## MERN Stack Developer
+The existing portfolio is a vanilla HTML/CSS/JavaScript site, built as a static Vite frontend. Its API is an Express and TypeScript service. The React files are retained as the original unused scaffold; the live portfolio page and its interactions remain the vanilla implementation.
 
-Welcome to my personal portfolio repository.
+## Project layout
 
-## 🚀 About Me
+```text
+frontend/   Static portfolio, images, CSS, browser JavaScript, and Vite config
+backend/    Express API, routes, contact model/controller, database config, and JSON fallback
+```
 
-- 🎓 BCA Graduate (2023–2026)
-- 💻 MERN Stack Developer
-- 🌱 Learning Cloud Computing & DevOps
-- 📍 India
-- 📧 Email: karthikeyankesu4@gmail.com
+## Local development
 
-## 🛠 Tech Stack
+Install dependencies from the repository root with `npm install`. Run the services in separate terminals:
 
-### Frontend
-- HTML5
-- CSS3
-- JavaScript
-- React.js
-- Bootstrap
+```sh
+npm run dev:backend
+npm run dev:frontend
+```
 
-### Backend
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
+The backend listens on port 5000 by default. The frontend listens on port 5173 and proxies `/api` requests to the backend during development. Set `FRONTEND_URL=http://localhost:5173` in `backend/.env` (see `backend/.env.example`). Set `VITE_API_URL` in `frontend/.env` for deployment; use the backend origin without a trailing slash. Leave it blank for local development.
 
-### Tools
-- Git
-- GitHub
-- VS Code
-- Postman
-- Nodemailer
+## Render deployment
 
-## 📂 Projects
+Deploy two services from this repository:
 
-### 🛒 Online Grocery Delivery Application
-Full-stack MERN grocery application.
+### Frontend: Static Site
 
-### 🎬 Netflix Clone
+- Root Directory: `frontend`
+- Build Command: `npm ci && npm run build`
+- Publish Directory: `dist`
+- Environment: `VITE_API_URL=https://<your-backend-service>.onrender.com`
 
-Responsive Netflix UI Clone.
+### Backend: Web Service
 
-### 🍔 Swiggy Clone
+- Root Directory: `backend`
+- Build Command: `npm ci && npm run build`
+- Start Command: `npm start`
+- Environment: `FRONTEND_URL=https://<your-static-site>.onrender.com`, plus `MONGODB_URI` and SMTP values as needed
+- Health check path: `/health`
 
-Food delivery interface using HTML, CSS & JavaScript.
+`MONGODB_URI` is optional for local development: without it, contact messages are stored in `backend/data/contacts.json`. Render's local filesystem is ephemeral, so configure MongoDB for contact records that must survive service restarts or redeploys. SMTP settings are optional; without them, the existing Ethereal test-email fallback is used.
 
-### 🌐 Portfolio Website
+## API routes
 
-Personal portfolio with working contact form using Nodemailer.
+- `GET /api/about`
+- `GET /api/skills`
+- `GET /api/projects`
+- `POST /api/contact`
+- `GET /api/contact/messages` (existing submissions listing endpoint)
+- `GET /health`
 
-## 📫 Connect with Me
-
-- GitHub: https://github.com/karthikeyan7333
-- LinkedIn:https://www.linkedin.com/in/karthikeyan-ajith-31726a40b
+The contact form submits to `POST /api/contact`. The portfolio loads its About, Skills, and Projects data from the corresponding GET endpoints.
